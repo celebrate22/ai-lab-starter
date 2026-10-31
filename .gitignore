@@ -1,0 +1,20 @@
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# secrets(keep .env.example tracked)
+.env
+
+# data: ignore contents, keep the folder
+data/*
+!data/.gitkeep
+
+# model checkpoints
+*.pt
+*.pth
+*.safetensors
+
+# jupyter
+.ipynb_checkpoints/
