@@ -18,3 +18,5 @@ data/*
 
 # jupyter
 .ipynb_checkpoints/
+
+*.egg-info/
