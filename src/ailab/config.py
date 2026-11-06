@@ -7,10 +7,10 @@ class Settings:
     log_level: str
     data_dir: str
 
-def get_key(nam: str) -> str:
-    value = os.getenv(nam)
+def get_key(name: str) -> str:
+    value = os.getenv(name)
     if value == None or value == "":
-        raise RuntimeError(f"{nam} is not set. Add it to your .env file.")
+        raise RuntimeError(f"{name} is not set. Add it to your .env file.")
     return value
 
 
