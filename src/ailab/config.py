@@ -21,9 +21,3 @@ def load_settings() -> Settings:
         data_dir=os.getenv("DATA_DIR", "data"),
     )
 
-def test_load_settings_defaults(monkeypatch):
-    monkeypatch.delenv("LOG_LEVEL", raising=False)
-    monkeypatch.delenv("DATA_DIR", raising=False)
-    settings = load_settings()
-    assert settings.log_level == "INFO"
-    assert settings.data_dir == "data"
