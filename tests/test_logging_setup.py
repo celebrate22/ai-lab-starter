@@ -38,4 +38,4 @@ def test_file_handler_writes_to_file(tmp_path):
 def test_calling_twice_does_not_duplicate_handlers():
     setup_logging("INFO")
     setup_logging("INFO")
-    assert ...                      # the root logger has exactly 1 handler
+    assert ...                      # the root logger has exactly 1 handler       
