@@ -64,6 +64,12 @@ These notes explain concepts already present in this project. Add a short defini
 
 ### Benchmark concepts
 
+- **Jupyter notebook:** A document that combines explanatory text and runnable code cells. `notebooks/report.ipynb` loads the saved local and Colab benchmark results and compares them.
+- **Notebook cell:** One section of a notebook. A Markdown cell contains explanation; a code cell contains Python to run. The report notebook uses both.
+- **Notebook kernel:** The running Python process that executes notebook code cells and keeps variables between cells. Run the report cells in order so variables loaded in earlier cells are available later.
+- **JSON parsing:** Reading JSON text and converting it into Python values. `json.loads()` turns benchmark file contents into dictionaries the report can inspect.
+- **Relative file path:** A location interpreted from the current working directory. The report uses `results/local_benchmark.json`, so it expects the notebook to run with the project root as its working directory.
+- **Timing ratio:** A comparison made by dividing the slower run's average duration by the faster run's duration. The report describes the result as an `x`-times speed difference, for example 2x.
 - **NumPy:** A Python library for working with arrays of numbers and performing mathematical operations. The benchmark uses NumPy arrays and its matrix multiplication operation.
 - **NumPy backend and GPU limit:** This benchmark calls NumPy's `@` operation and does not call a GPU library such as CUDA. It measures the NumPy implementation available in the current Python environment, normally on the CPU; the `local` or `colab` label does not choose hardware.
 - **Matrix multiplication operator (`@`):** Python syntax for multiplying matrices. In `benchmark.py`, `left @ right` multiplies the two NumPy input matrices and creates a result matrix.
