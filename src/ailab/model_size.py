@@ -42,6 +42,7 @@ def main() -> int:
     )
     parser.add_argument(
         "precision",
+        type=str.lower,
         choices=tuple(BITS_PER_PARAMETER),
         help="number format used to store each parameter",
     )

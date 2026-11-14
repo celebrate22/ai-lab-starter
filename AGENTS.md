@@ -12,9 +12,78 @@ These notes explain concepts already present in this project. Add a short defini
 - **Subprocess:** A separate program started by Python. `check_env.py` starts `nvidia-smi` as a subprocess to ask NVIDIA's tool for GPU information.
 - **Exit code:** A number a program returns when it finishes. Zero usually means success; a nonzero number signals a problem. The readiness check returns a nonzero code when Python is too old or a required package cannot be imported.
 - **Timeout:** A limit on how long an operation may take. The GPU query has a five-second timeout so a stuck system command cannot hang the check indefinitely.
-- **Model parameter:** A learned number inside an AI model. The number of parameters is one rough measure of model size. For example, a model with 7 billion parameters has 7 billion learned numbers.
+- **Model parameter:** A number adjusted during training so an AI model can learn patterns. A model may have millions or billions of parameters. We count them because each stored parameter uses memory; multiplying the count by the bits used for each number estimates the memory needed to store the model's parameters. For example, 7 billion parameters stored at 16 bits each need about 14 GB for parameter storage alone.
+- **Model weights:** Another common name for the learned parameter values in a model. When a model is loaded, its weights must be placed in memory before it can make predictions.
+- **AI model:** A computer program made from a design (its architecture) and, for a trained model, learned parameter values. It uses the design and values to turn an input into a prediction or response.
+- **Architecture:** The arrangement of parts and operations that defines how a model processes information. Two models can have different architectures even when they have similar parameter counts.
+- **Training data:** Examples used to teach a model, such as text the model learns patterns from. Training data is used during training and is not counted as model parameters.
+- **Training:** The process of adjusting a model's parameters using examples so its predictions improve. Training typically uses more memory than just storing the finished weights.
+- **Loss:** A number that measures how far a model's prediction is from the desired answer during training. Training tries to reduce this error measure.
+- **Optimizer:** A training method that uses the loss to decide how to adjust model parameters. Optimizer state takes additional memory during training.
+- **Layer:** One processing stage in a neural network. A language model passes numeric information through many layers to produce its next-token prediction.
+- **Forward pass:** One run of input through a model's layers to calculate a prediction. During a prompt response, the model performs forward computations to predict the next token.
+- **Logit:** A raw score the model produces for each possible next token before those scores are converted into probabilities.
+- **Probability distribution:** A set of probabilities over possible next tokens. The model uses these probabilities to choose or sample a next token.
+- **Autoregressive generation:** Producing text one token at a time, feeding each generated token back as context to predict the next one.
+- **Context window:** The maximum amount of input and generated token history a model can consider at one time. Longer context can require more temporary memory.
+- **KV cache:** Temporary stored attention information reused while generating a response, so the model does not need to recompute all previous-token information every time. It uses additional memory that grows with the conversation length.
+- **Prompt:** The text or other input a person gives to a model, such as a question. `model_size.py` does not read or process prompts.
+- **Token:** A piece of text, such as a word, part of a word, or punctuation, used by a language model. Prompt tokens are input data; they are not the model's learned parameters.
+- **Tokenizer and token ID:** A tokenizer splits text into tokens and maps them to numeric IDs the model can process. This project’s model-size estimator does not tokenize text or count token IDs.
+- **Embedding and activation:** Numeric representations and intermediate values created while a model processes input. Their memory is temporary working memory and is not included in the parameter-storage estimate.
 - **Number format / precision:** The way each number is stored, including how many bits are used. `fp16` stores each number in 16 bits; lower precision generally uses less memory, though it can affect numerical accuracy.
+- **Floating-point format:** A way to store numbers that may include a fractional part. `fp32`, `fp16`, and `bf16` are floating-point formats; `fp32` uses more memory per parameter than the 16-bit formats.
+- **Integer format:** A way to store whole-number values. `int8` and `int4` use fewer bits than common floating-point formats and are often used after quantization.
+- **Quantization:** Converting model weights into a lower-bit number format to reduce memory use and sometimes improve speed. It can slightly change a model's answers, and real quantized files may need extra scale information, so this project's simple estimate is approximate.
 - **Memory estimate:** An approximate calculation of how much memory is needed to store model parameters. For parameter storage alone, 7 billion parameters at 16 bits each need about 14 billion bytes (roughly 14 GB in the project's simplified estimate). Real model use also needs memory for other data, so the estimate is not a guarantee that a model will run.
+- **Bit and byte:** A bit is a single binary digit; a byte is eight bits. `model_size.py` multiplies the parameter count by the bits per parameter, then divides by eight to estimate bytes.
+- **GB (gigabyte):** A decimal unit of memory equal to one billion bytes. The model size estimator reports decimal GB, so 14,000,000,000 bytes is 14 GB. Some computer tools use GiB (gibibytes), which is a different unit.
+- **Floating-point and integer formats:** Ways to represent numbers. `fp32` uses 32 bits per parameter; `fp16` and `bf16` use 16; `int8` uses 8; and `int4` uses 4. The estimator assumes these values are stored densely, including two 4-bit values per byte for `int4`.
+- **Parameter storage estimate:** The calculation in `estimate_memory_gb()` covers only the memory for model parameters. A running model also needs memory for temporary calculations, inputs, and other data, so actual memory use is higher.
+- **Inference:** Using a trained model to produce an answer or prediction. Inference needs memory for weights and additional working data, so a model whose weights fit may still fail to run.
+- **Activation and cache memory:** Temporary memory used while processing input and generating output. For a language model, longer conversations and larger batches can increase this memory; `model_size.py` does not estimate it.
+- **Training memory:** Memory needed to adjust model weights during training. Training usually needs substantially more memory than merely storing weights because it also keeps gradients and optimizer data; this estimator does not estimate training requirements.
+- **System RAM and VRAM:** RAM is the computer's main memory; VRAM is memory attached to a GPU. A model loaded on a GPU needs enough VRAM for its weights and working data. This estimate gives a size but does not inspect available RAM or VRAM or guarantee the model will fit.
+- **Memory fit example:** If the estimate says 14 GB and a GPU has 8 GB of VRAM, the weights alone exceed that GPU memory. A GPU with 16 GB may still not have enough room for all working data.
+- **Argument parser:** A tool that reads and checks values supplied after a terminal command. `argparse` lets `model_size.py` accept a parameter count and a precision, for example `python -m ailab.model_size 7000000000 fp16`.
+- **Positional command-line argument:** A value supplied to a command in a specific order. In the model-size command, the first value is the parameter count and the second is the precision.
+- **Input validation:** Checking that provided values are allowed before using them. The estimator rejects a nonpositive parameter count and unsupported precision names.
+- **Dictionary:** A collection that maps keys to values. `BITS_PER_PARAMETER` maps names such as `fp16` to the number of bits used for each parameter.
+- **Constant:** A value intended to stay fixed while a program runs. By convention, Python constant names are written in uppercase; `BITS_PER_PARAMETER` lists the supported storage formats.
+- **`ValueError`:** A Python error used when a value has the right general type but is not acceptable. `estimate_memory_gb()` raises it for invalid parameter counts or unknown precision names.
+- **`isinstance()`:** A built-in function that checks whether a value belongs to a given type. The estimator uses it to reject values such as a decimal or text where it expects an integer count.
+- **Type checking:** Checking the kind of value supplied to a function. The model estimator checks for a whole-number parameter count before doing arithmetic.
+- **Logical operator (`or`):** Combines conditions so the overall condition is true when either side is true. The parameter-count check rejects the input if it is a Boolean or is not an integer.
+- **Boolean as an integer:** In Python, `bool` is technically a kind of `int`, so `True` behaves like `1`. The estimator explicitly rejects Booleans so `True` cannot accidentally mean one model parameter.
+- **String normalization:** Converting text into a consistent form before comparing it. `precision.lower()` allows the function to accept `FP16` as well as `fp16`.
+- **Dictionary membership and lookup:** `name in mapping` checks whether a key exists; `mapping[name]` retrieves its value. `BITS_PER_PARAMETER` is checked for the requested format, then used to retrieve its bit count.
+- **`str.join()`:** Combines multiple strings with a chosen separator. `", ".join(BITS_PER_PARAMETER)` creates the readable list of supported formats for an error message.
+- **`argparse` argument conversion and choices:** The command-line parser converts the first argument to an integer with `type=int`, lowercases the second with `type=str.lower`, and restricts it to known format names with `choices=...`.
+- **Formatted number fields:** Formatting instructions control how numbers appear in output. `:.2f` shows two digits after the decimal point, while `:,` adds thousands separators to the parameter count.
+- **Parser error:** A clear command-line error message that also shows usage information and ends the command with a failure exit code. `parser.error()` handles invalid values from the estimation function.
+
+### Benchmark concepts
+
+- **NumPy:** A Python library for working with arrays of numbers and performing mathematical operations. The benchmark uses NumPy arrays and its matrix multiplication operation.
+- **NumPy backend and GPU limit:** This benchmark calls NumPy's `@` operation and does not call a GPU library such as CUDA. It measures the NumPy implementation available in the current Python environment, normally on the CPU; the `local` or `colab` label does not choose hardware.
+- **Matrix multiplication operator (`@`):** Python syntax for multiplying matrices. In `benchmark.py`, `left @ right` multiplies the two NumPy input matrices and creates a result matrix.
+- **Array:** An ordered group of values, often arranged in one or more dimensions. In the benchmark, each matrix is a two-dimensional NumPy array.
+- **Matrix size:** The number of rows and columns in a square matrix. A size of 512 means each input has 512 rows and 512 columns.
+- **Floating-point data type (`float32`):** A number format that uses 32 bits per value. The benchmark uses it for matrix elements to keep memory use and computation reasonable.
+- **Random number generator:** A tool that produces number sequences for calculations. The benchmark uses NumPy's generator to create its input matrices.
+- **Seed:** A starting value for a random number generator. Reusing the same seed makes it generate the same input matrices, helping make benchmark runs comparable.
+- **NumPy random generator:** `np.random.default_rng(seed)` creates a generator used to make repeatable random matrices. Reusing the seed makes the same test inputs within compatible NumPy versions.
+- **Repetition:** One measured run of the operation. The benchmark repeats matrix multiplication and records the average and fastest duration to reduce reliance on a single timing.
+- **High-resolution timer:** A timer suited to measuring short durations accurately. `time.perf_counter()` measures how long each matrix multiplication takes.
+- **Warm-up run:** An initial operation run before measurements begin. `benchmark.py` performs one multiplication first so one-time setup is less likely to distort the measured repetitions.
+- **Platform information:** Details identifying the operating system and environment. The benchmark records `platform.platform()`, along with Python and NumPy versions, to give timing results context.
+- **Path object:** A Python object representing a filesystem location. `Path("results") / filename` builds the output file location in a way that works across operating systems.
+- **Parent directory:** The folder that contains a file. `output_path.parent.mkdir(parents=True, exist_ok=True)` creates missing output folders before writing the JSON file.
+- **JSON serialization:** Converting Python data such as dictionaries, strings, numbers, and lists into JSON text. `json.dumps()` serializes the benchmark result before it is saved.
+- **UTF-8:** A common text encoding that supports characters from many languages. `write_text(..., encoding="utf-8")` saves the JSON using UTF-8.
+- **Timing scope:** The exact work included in a measurement. The benchmark times each NumPy `@` operation, including creation of its result array, but excludes creating the random input matrices and writing the JSON file.
+- **JSON result file:** A saved record of benchmark settings and measurements. The CLI writes local results to `results/local_benchmark.json` or Colab results to `results/colab_benchmark.json` by default.
+- **Benchmark environment label:** A name recorded with the results to say where the run happened, such as `local` or `colab`. The label is selected by the user; it does not itself detect or change the hardware.
 - **VRAM:** Memory on a graphics processing unit (GPU). AI models and calculations running on the GPU need enough VRAM for the model and its working data. A model estimate larger than available VRAM is a warning that it may not fit.
 - **Benchmark:** A timed workload used to measure and compare performance. `benchmark.py` is intended to time matrix multiplication on the local computer and in Google Colab.
 - **Matrix multiplication:** A mathematical operation combining rows and columns of number tables (matrices). It is a common workload in AI, so its speed can give a rough view of compute performance.
