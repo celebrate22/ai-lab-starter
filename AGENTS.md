@@ -172,6 +172,24 @@ These notes explain concepts already present in this project. Add a short defini
 - **Logger:** A program component that records messages about what the program is doing. This project's `setup_logging()` configures messages to go to the terminal and optionally to a file.
 - **Log level:** A label that indicates the importance of a log message, such as `DEBUG`, `INFO`, or `ERROR`. A level controls which messages are shown.
 
+### Production readiness concepts
+
+- **Production readiness:** Preparing software to work safely and consistently for people beyond its author. For this project, that means clear setup steps, validated configuration, useful errors, repeatable dependencies, and reliable benchmark records.
+- **Dependency pinning:** Specifying exact dependency versions instead of accepting any version. `pyproject.toml` currently names dependencies without exact versions; pinning or a lockfile can help another machine install the same tool versions.
+- **Lockfile:** A generated record of exact direct and indirect dependency versions. A lockfile for this project would make installs more repeatable across machines.
+- **Environment-specific configuration:** Different settings for development, testing, and production use. For example, local development may use `.env`, while a deployed environment should receive secrets from its hosting platform.
+- **Fail-fast validation:** Checking required settings and inputs at startup and reporting a clear error immediately when they are invalid. `get_key()` already fails when a requested API key is missing; future commands can validate their settings before doing expensive work.
+- **Secrets manager:** A service designed to store and provide credentials securely. A hosted version of this project should obtain API keys from its platform's secrets manager rather than committing them or placing them in a shared file.
+- **Least privilege:** Giving a credential only the access it needs. An API key used by a future lab should have the smallest permissions and spending limits that still let that lab work.
+- **Structured logging:** Writing log records with named fields, often as JSON, so tools can filter and analyze them. The current logging setup writes readable text; structured fields such as run name and benchmark size could help diagnose later runs.
+- **Observability:** Information that helps explain what a program did and why, usually through logs, metrics, and traces. This project's benchmark timings and environment details are basic metrics; adding run identifiers and clear error logs would make results easier to investigate.
+- **Resource budget:** A limit or estimate for memory, time, or compute a task may use. `model_size.py` estimates parameter memory, while a production benchmark should also use a reasonable matrix-size limit and report when a run may consume too much memory.
+- **Artifact provenance:** Metadata describing how a saved result or model artifact was produced. Benchmark JSON already records the seed, software versions, platform, and settings; recording a timestamp and Git revision would make each result easier to trace back to its run.
+- **Continuous integration (CI):** Automation that runs checks when code changes are pushed or proposed. A CI workflow for this project could install its dependencies and run `pytest` so basic failures are found before changes are shared.
+- **Containerization:** Packaging a program with its runtime setup so it behaves more consistently across computers. The project's future Dockerfile could describe a container for running the lab tools, though hardware access such as GPU support still needs separate configuration.
+- **Docker Compose:** A tool for describing and starting multiple containers together. A local dashboard could use Compose to start the Python backend and its supporting database with one command.
+- **Persistent volume:** Storage kept outside a container's temporary filesystem. A database volume lets benchmark history survive when a Docker container is stopped and recreated.
+
 ### As the project grows
 
 Add concepts such as command-line tools, shell scripts, notebooks, data files, benchmarks, containers, model files, or deployment when they come up. Include a concise definition and an example from this project.
