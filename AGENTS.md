@@ -190,6 +190,62 @@ These notes explain concepts already present in this project. Add a short defini
 - **Docker Compose:** A tool for describing and starting multiple containers together. A local dashboard could use Compose to start the Python backend and its supporting database with one command.
 - **Persistent volume:** Storage kept outside a container's temporary filesystem. A database volume lets benchmark history survive when a Docker container is stopped and recreated.
 
+### Building complete applications
+
+These examples describe a possible future web interface for the lab tools. The repository is currently a Python toolkit; it does not yet contain a web frontend, backend service, or database.
+
+**How the parts fit together:** A browser frontend sends an HTTP request to a backend API. The backend validates the input, reads safe configuration and credentials, calls application logic or an AI model, and stores appropriate records in a database. Database migrations evolve the database structure as the application changes. Tests and CI check changes; a packaged build is deployed to staging and then production, where logs and metrics help operators understand how it is working.
+
+- **Application architecture:** The way an application’s parts are organized and communicate. A small lab web app could have a browser frontend, a Python backend, and a database for saved benchmark runs.
+- **Frontend:** The part people see and interact with, commonly a web page in a browser. A future lab frontend could let someone enter a model's parameter count and precision and display the estimate.
+- **Backend:** The server-side code that validates requests, runs application logic, and accesses protected resources. A Python backend could call `estimate_memory_gb()` and keep API keys away from the browser.
+- **Client and server:** The client asks for work; the server receives the request and sends a response. A browser is a client and a Python web service is a server.
+- **API (application programming interface):** A defined way for two pieces of software to communicate. A backend endpoint such as `POST /estimates` could accept a parameter count and precision and return estimated memory as JSON.
+- **HTTP request and response:** A request is a message sent to a web service; a response is the service's reply, often with a status code and data. The frontend sends form values to the backend and displays its response.
+- **HTTP status code:** A number in an HTTP response that summarizes the result, such as success (`200`) or invalid client input (`400`). API activities use status codes to distinguish user mistakes from server failures.
+- **Endpoint:** A particular API operation identified by a URL path and HTTP method. A future `POST /estimates` endpoint would receive estimate inputs and return the calculated memory.
+- **User story:** A short description of a feature from the user's point of view. For example: “As a learner, I want to enter a parameter count and precision so I can estimate model memory.”
+- **Acceptance criteria:** Specific conditions that must be true for a feature to count as complete. For the estimator page, criteria could require valid estimates to appear and negative counts to show an error.
+- **Wireframe:** A simple sketch of a screen's layout made before detailed styling. A wireframe for the lab dashboard could show the estimate form, result, and benchmark history areas.
+- **Pydantic model:** A Python class used by FastAPI to describe and validate incoming or outgoing data. A request model could require a positive parameter count and a supported precision before the backend calls `estimate_memory_gb()`.
+- **`fetch()`:** A browser JavaScript function for sending HTTP requests. The future frontend uses `fetch()` to send form values to the Python API and read its JSON response.
+- **Separation of concerns:** Keeping parts responsible for distinct jobs. The frontend handles display, the backend handles validation and calculations, and a database stores records; changing one part then has less impact on the others.
+- **Database:** Software that stores information so it can be searched and reused later. A future version could save benchmark runs instead of relying only on JSON files.
+- **SQLite:** A small relational database stored in a local file, useful for learning and single-computer applications. The first dashboard version could save its benchmark history in SQLite before moving to a server database.
+- **Relational database:** A database that stores structured information in tables with relationships between rows. SQLite could suit a local learning app; PostgreSQL is a common choice for a shared deployed service.
+- **Database schema:** The defined structure of a database, including tables, columns, data types, and relationships. A benchmark table might have columns for environment, matrix size, average duration, and run time.
+- **Database migration:** A versioned change to a database schema or stored data. If a later release adds a `gpu_name` column to benchmark runs, a migration adds that column to existing databases without deleting their saved results.
+- **Migration history:** A record of which migrations have already been applied. The application uses it to apply each database change in order and avoid applying the same change twice.
+- **Migration safety:** Planning schema changes so old and new application versions can operate during a release. For example, add a new optional column first, deploy code that can use it, then remove obsolete fields in a later release.
+- **ORM (object-relational mapper):** A library that lets code work with database rows through Python objects. An ORM can reduce repetitive SQL, but developers still need to understand the tables and migrations it creates.
+- **SQLAlchemy:** A Python database toolkit and ORM. The learning path uses it to connect backend Python code to SQLite first and potentially PostgreSQL later.
+- **Alembic:** A database migration tool commonly used with SQLAlchemy. A future dashboard would use Alembic revisions to add or change columns while preserving saved benchmark runs.
+- **CRUD:** The common database actions Create, Read, Update, and Delete. Benchmark history needs at least create and read operations: save a run and list saved runs.
+- **Authentication and authorization:** Authentication checks who a user is; authorization checks what that user is allowed to do. A future shared dashboard might require sign-in and restrict who can view or delete saved runs.
+- **AI integration:** Connecting an application to a model running locally or through a provider's API. The backend should make the model call and protect its credentials; the frontend sends user input and displays the result.
+- **Model serving:** Making a trained model available to applications through a callable service or local runtime. A future lab could compare calling a hosted model service with running a model on local hardware.
+- **Embedding:** A list of numbers representing the meaning or features of text. AI applications can use embeddings to find text with related meaning, beyond exact word matches.
+- **Vector search:** Finding embeddings that are numerically similar to a query embedding. A future lab could compare vector search results and measure its speed.
+- **Retrieval-augmented generation (RAG):** A pattern where an application searches trusted documents and gives relevant passages to a language model along with the user's question. The backend performs retrieval and model calls; the frontend presents the answer and, ideally, its sources.
+- **AI evaluation:** A repeatable check of model outputs against examples and criteria. A future lab could save a set of prompts and expected behaviors, then compare quality, latency, and cost across models.
+- **Mock or fake service:** A controlled replacement for a real external service during testing. Tests for a future AI endpoint can use a fake model response so they are predictable and do not spend money or require a live API key.
+- **Deployment:** Releasing an application to an environment where its intended users can run it. Deploying this project as a web app would require the backend, configuration, dependencies, and any database to be available on a server or hosting platform.
+- **Build artifact:** The packaged output that is released, such as a Python package, container image, or frontend bundle. A release should identify which code version produced the artifact.
+- **Development, staging, and production:** Separate environments for building, rehearsing, and serving the real application. A staging deployment can test code and database migrations with safe test data before production users are affected.
+- **Continuous delivery/deployment (CD):** Automation that packages and releases changes after checks pass. Continuous delivery prepares a release for approval; continuous deployment releases automatically.
+- **Database backup and restore:** A backup is a recoverable copy of stored data; restore is the process of recovering it. Before a production database migration, teams make and verify backups so accidental data loss can be repaired.
+- **Rollback:** Returning to a previous application release after a deployment problem. Database changes need a compatible recovery plan too; reverting code alone may not undo a data change safely.
+- **Health check:** A small check that reports whether a service can accept work. A deployed lab backend could expose a health endpoint that checks the process and essential dependencies without running a full benchmark.
+- **Rate limiting:** Restricting how many requests a user or client can make in a time period. A future AI endpoint can use it to prevent accidental loops, protect provider budgets, and keep one user from exhausting shared capacity.
+- **Caching:** Keeping a reusable result temporarily so repeated requests can be answered faster. A deployed estimator could cache identical calculations, while AI responses require careful cache keys and privacy rules.
+- **Developer toolchain:** The set of tools used to edit, format, check, run, and release code. For this Python project that can include an editor, shell, Git, a package installer, `pytest`, a formatter, a linter, and CI.
+- **Formatter:** A tool that automatically applies consistent code layout. A Python formatter can keep files such as `check_env.py` and `benchmark.py` consistent without changing their intended behavior.
+- **Linter:** A tool that flags likely mistakes and style problems. A linter could catch unused imports, such as an import that is never referenced.
+- **Type checker:** A tool that reviews type hints and reports places where values may not match the types code expects. It can catch errors before a Python program runs.
+- **Debugger:** A tool for pausing a running program and inspecting its values step by step. It can help understand why a readiness check or future API request produced an unexpected result.
+- **Unit, integration, and end-to-end tests:** A unit test checks one small function; an integration test checks connected parts such as the backend and database; an end-to-end test checks a complete user flow from frontend input to displayed result.
+- **Code review:** A second look at proposed changes to catch bugs, unclear code, and security issues before release. A production change should be reviewed together with its diff and relevant test results.
+
 ### As the project grows
 
 Add concepts such as command-line tools, shell scripts, notebooks, data files, benchmarks, containers, model files, or deployment when they come up. Include a concise definition and an example from this project.
