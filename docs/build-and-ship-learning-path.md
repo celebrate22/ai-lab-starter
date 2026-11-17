@@ -168,7 +168,7 @@ Use SQLAlchemy to connect Python objects and SQL tables, and Alembic to manage m
 
 ## A practical order for this repository
 
-1. Finish README/setup commands and complete the currently unfinished tests.
+1. Follow the README/setup commands and review the tests that cover the current tools.
 2. Run and understand the existing command-line tools and benchmark report.
 3. Build the small browser estimator.
 4. Add a FastAPI backend that calls the existing Python functions.
