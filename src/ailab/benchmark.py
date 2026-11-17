@@ -8,17 +8,32 @@ import time
 
 import numpy as np
 
+MAX_MATRIX_SIZE = 4096
+
 
 def run_benchmark(
     matrix_size: int = 512,
     repetitions: int = 5,
     seed: int = 42,
 ) -> dict[str, object]:
-    """Run repeated square-matrix multiplications and return measurements."""
+    """Run repeated square-matrix multiplications and return measurements.
+
+    The size limit keeps accidental command-line inputs from allocating
+    unexpectedly large arrays. Three float32 matrices at the maximum size
+    occupy about 192 MiB, before any temporary memory used by NumPy's backend.
+    """
+    if isinstance(matrix_size, bool) or not isinstance(matrix_size, int):
+        raise ValueError("matrix_size must be a whole number")
     if matrix_size <= 0:
         raise ValueError("matrix_size must be greater than zero")
+    if matrix_size > MAX_MATRIX_SIZE:
+        raise ValueError(f"matrix_size cannot be greater than {MAX_MATRIX_SIZE}")
+    if isinstance(repetitions, bool) or not isinstance(repetitions, int):
+        raise ValueError("repetitions must be a whole number")
     if repetitions <= 0:
         raise ValueError("repetitions must be greater than zero")
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("seed must be a whole number")
     if seed < 0:
         raise ValueError("seed cannot be negative")
 
@@ -27,16 +42,16 @@ def run_benchmark(
     right = random.random((matrix_size, matrix_size), dtype=np.float32)
 
     # Run once before timing so first-use setup does not skew the measurements.
-    left @ right
+    warm_up_result = left @ right
+    del warm_up_result
 
     durations = []
     for _ in range(repetitions):
         start = time.perf_counter()
         product = left @ right
-        durations.append(time.perf_counter() - start)
-
-    # Keep a reference to the final result until after timing is complete.
-    del product
+        duration = time.perf_counter() - start
+        del product
+        durations.append(duration)
 
     return {
         "matrix_size": matrix_size,
