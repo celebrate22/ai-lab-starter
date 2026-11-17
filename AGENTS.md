@@ -264,3 +264,16 @@ These examples describe a possible future web interface for the lab tools. The r
 ### As the project grows
 
 Add concepts such as command-line tools, shell scripts, notebooks, data files, benchmarks, containers, model files, or deployment when they come up. Include a concise definition and an example from this project.
+
+### Sample data and safe downloads
+
+- **Sample data:** A small example file used to learn or demonstrate how a program handles data. The downloader saves a user-selected public sample into this project's ignored `data/` folder.
+- **HTTPS:** The encrypted form of HTTP used to transfer information between a client and a server. The sample downloader accepts HTTPS URLs and checks that redirects remain HTTPS.
+- **Streaming download:** Reading a response in small chunks instead of loading the entire file into memory. `download_sample_data.py` reads 64 KiB chunks and stops when the configured size limit is reached.
+- **Download size limit:** A maximum allowed number of bytes for a downloaded file. The helper defaults to 10 decimal megabytes so a mistaken URL is less likely to fill storage or use excessive memory.
+- **Temporary file:** A short-lived file used while work is incomplete. The downloader writes to a `.part` temporary file and removes it if the download fails.
+- **Atomic replacement:** A filesystem operation that makes a completed file appear at its destination as one operation, instead of exposing a partially written result. The downloader uses `os.replace()` after a successful download.
+- **Overwrite protection:** A check that prevents replacing an existing file by mistake. The downloader requires `--force` before replacing a file already in `data/`.
+- **Resource limit:** A bound that keeps a program's CPU, memory, storage, or time use within a chosen range. `benchmark.py` limits matrix edges to 4096, while the downloader limits transfer size to 10 MB by default.
+- **Test double:** A controlled stand-in for a real dependency during a test. The downloader tests replace `urlopen` with in-memory responses, so they verify download logic without contacting a real website.
+- **Parameterized test:** One test function run with several sets of inputs. The format and validation tests use pytest parameterization to check multiple precisions or invalid values with the same test logic.
