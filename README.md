@@ -84,13 +84,30 @@ Run the tests:
 make test
 ```
 
-Some tests are currently unfinished placeholders. A successful test command does not yet mean every planned behavior is covered.
+The tests cover the current checks, configuration, logging, estimates, benchmark input validation, and the sample-data downloader. They do not prove behavior on every operating system or hardware setup.
+
+## Download a small sample file
+
+The helper accepts an HTTPS URL, writes into `data/`, and limits downloads to 10 MB by default. It does not choose or download a file automatically; use a public sample URL you trust:
+
+```sh
+.venv/bin/python scripts/download_sample_data.py https://example.org/sample.csv
+```
+
+Choose a filename or change the size limit when needed:
+
+```sh
+.venv/bin/python scripts/download_sample_data.py https://example.org/sample.csv --filename tiny.csv --max-mb 2
+```
+
+An existing file is preserved unless `--force` is supplied. `data/` contents are ignored by Git so downloaded data is not accidentally added to project history.
 
 ## Important limits
 
 - The model-size result estimates storage for weights only. It does not inspect a model file or available RAM/VRAM, and it excludes memory needed while the model runs.
 - The environment check can ask `nvidia-smi` about NVIDIA hardware; it does not measure free GPU memory or check every GPU vendor.
 - The benchmark uses NumPy and does not select a GPU. It measures the NumPy matrix-multiplication implementation available in that environment, normally on the CPU. The `local` and `colab` labels describe where you ran it; they do not configure the hardware.
+- The benchmark limits each matrix edge to 4096 elements to reduce accidental large allocations. This still uses about 192 MiB for its two inputs and one output at maximum size, before NumPy backend workspace.
 - For a fair timing comparison, use the same matrix size and data type on both machines. Different hardware, system load, and NumPy builds can still affect results.
 
 ## Run with Docker
@@ -123,6 +140,7 @@ The container has its own filesystem and does not automatically see your host's 
 - `src/ailab/logging_setup.py` — terminal and optional file logging
 - `src/ailab/model_size.py` — parameter-memory estimate
 - `src/ailab/benchmark.py` — matrix-multiplication timing and JSON output
+- `scripts/download_sample_data.py` — download a bounded public sample file into `data/`
 - `notebooks/report.ipynb` — compare local and Colab benchmark files
 - `tests/` — automated behavior checks
 - `docs/build-and-ship-learning-path.md` — practical path from this toolkit to a deployed application
