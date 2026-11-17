@@ -1,0 +1,5 @@
+# pyproject.toml is the single source of dependency declarations.
+# Install the project and its normal dependencies with:
+#   python -m pip install -e .
+# Include development tools (pytest and Jupyter) with:
+#   python -m pip install -e '.[dev]'
