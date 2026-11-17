@@ -37,6 +37,7 @@ def run_benchmark(
     if seed < 0:
         raise ValueError("seed cannot be negative")
 
+    # Make repeatable input matrices from the requested seed.
     random = np.random.default_rng(seed)
     left = random.random((matrix_size, matrix_size), dtype=np.float32)
     right = random.random((matrix_size, matrix_size), dtype=np.float32)
@@ -45,6 +46,7 @@ def run_benchmark(
     warm_up_result = left @ right
     del warm_up_result
 
+    # Time only the multiplication. Delete each output after stopping the timer.
     durations = []
     for _ in range(repetitions):
         start = time.perf_counter()
@@ -69,6 +71,7 @@ def run_benchmark(
 
 def main() -> int:
     """Run the benchmark and save it to the selected JSON file."""
+    # Read command-line options, run the calculation, then save its record.
     parser = argparse.ArgumentParser(
         description="Measure NumPy matrix multiplication on this machine."
     )
