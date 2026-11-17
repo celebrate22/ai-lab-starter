@@ -15,6 +15,7 @@ BITS_PER_PARAMETER = {
 
 def estimate_memory_gb(parameter_count: int, precision: str) -> float:
     """Estimate parameter storage in decimal gigabytes (GB)."""
+    # Reject bad inputs before doing the memory calculation.
     if isinstance(parameter_count, bool) or not isinstance(parameter_count, int):
         raise ValueError("parameter_count must be a whole number")
     if parameter_count <= 0:
@@ -27,6 +28,7 @@ def estimate_memory_gb(parameter_count: int, precision: str) -> float:
         choices = ", ".join(BITS_PER_PARAMETER)
         raise ValueError(f"precision must be one of: {choices}")
 
+    # Convert bits to bytes, then bytes to decimal gigabytes.
     bits_per_parameter = BITS_PER_PARAMETER[normalized_precision]
     bytes_needed = parameter_count * bits_per_parameter / 8
     return bytes_needed / 1_000_000_000
@@ -34,6 +36,7 @@ def estimate_memory_gb(parameter_count: int, precision: str) -> float:
 
 def main() -> int:
     """Read model details from the command line and print an estimate."""
+    # argparse reads and checks the two values typed after the command.
     parser = argparse.ArgumentParser(
         description="Estimate memory needed to store AI model parameters."
     )
