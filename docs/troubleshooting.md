@@ -99,4 +99,4 @@ An empty placeholder file is not a benchmark result. Rerun the benchmark for tha
 
 ### `make test` succeeds but a feature is still broken
 
-Some test files are empty and the logging tests still contain placeholder assertions. The current suite does not cover every behavior. Treat this as known incomplete coverage and add meaningful tests as each feature is completed.
+The tests cover the current core behavior, but they cannot prove behavior on every operating system, Python build, network response, or hardware setup. Add a focused test when a new behavior is introduced, then run the suite in the environment you plan to use.
