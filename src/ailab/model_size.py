@@ -20,6 +20,8 @@ def estimate_memory_gb(parameter_count: int, precision: str) -> float:
     if parameter_count <= 0:
         raise ValueError("parameter_count must be greater than zero")
 
+    if not isinstance(precision, str):
+        raise ValueError("precision must be a text format name")
     normalized_precision = precision.lower()
     if normalized_precision not in BITS_PER_PARAMETER:
         choices = ", ".join(BITS_PER_PARAMETER)
