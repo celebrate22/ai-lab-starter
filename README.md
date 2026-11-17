@@ -2,6 +2,8 @@
 
 `ai-lab-starter` is a small Python toolkit for checking whether a computer is ready for AI experiments, estimating model-weight memory, and measuring a basic matrix-multiplication workload.
 
+If the files and terms are new, start with the [plain-English project file tour](docs/project-file-tour.md). It explains the setup script, configuration, benchmark flow, generated results, and notebook.
+
 It helps answer four questions:
 
 1. **Is my Python setup ready?** `check_env.py` checks the Python version, virtual environment, Git command, required package imports, and whether NVIDIA's `nvidia-smi` tool can report a GPU.
