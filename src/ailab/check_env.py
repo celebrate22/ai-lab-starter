@@ -1,7 +1,9 @@
 """Check whether this computer has the basics needed for the AI lab."""
 
 from dataclasses import dataclass
+import csv
 import importlib
+import io
 import shutil
 import subprocess
 import sys
@@ -48,26 +50,94 @@ def check_package(module_name: str) -> CheckResult:
     return CheckResult("ok", f"{module_name} is importable")
 
 
+def _format_gib(bytes_value: int) -> str:
+    """Turn a byte count into a readable number of GiB."""
+    gib = bytes_value / (1024**3)
+    return f"{gib:.1f} GiB"
+
+
+def check_system_memory() -> CheckResult:
+    """Report total, used, and currently available system RAM."""
+    try:
+        # Import here so this checker can still report a missing psutil package.
+        psutil = importlib.import_module("psutil")
+        memory = psutil.virtual_memory()
+    except ImportError:
+        return CheckResult("error", "system memory unavailable (psutil is not importable)")
+    except OSError:
+        return CheckResult("info", "system memory status unavailable")
+
+    return CheckResult(
+        "ok",
+        "System RAM: "
+        f"{_format_gib(memory.total)} total, "
+        f"{_format_gib(memory.used)} used, "
+        f"{_format_gib(memory.available)} available",
+    )
+
+
 def check_nvidia_gpu() -> CheckResult:
-    """Look for an NVIDIA GPU using NVIDIA's optional nvidia-smi command."""
+    """Report NVIDIA GPU names and memory using the optional nvidia-smi command."""
     if not shutil.which("nvidia-smi"):
         return CheckResult("info", "NVIDIA GPU status unavailable (nvidia-smi not found)")
 
     try:
         result = subprocess.run(
-            ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+            [
+                "nvidia-smi",
+                "--query-gpu=index,name,memory.total,memory.used,memory.free",
+                "--format=csv,noheader,nounits",
+            ],
             check=True,
             capture_output=True,
             text=True,
             timeout=5,
         )
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return CheckResult("info", "NVIDIA GPU status unavailable (nvidia-smi could not query it)")
 
-    gpu_names = result.stdout.strip()
-    if gpu_names:
-        return CheckResult("ok", f"NVIDIA GPU detected: {gpu_names.splitlines()[0]}")
-    return CheckResult("info", "nvidia-smi ran, but it reported no NVIDIA GPU")
+    # NVIDIA prints one comma-separated row per GPU. With nounits enabled,
+    # the three memory values are integers in MiB; 1 GiB equals 1024 MiB.
+    gpu_rows = list(csv.reader(io.StringIO(result.stdout), skipinitialspace=True))
+    gpu_reports = []
+    memory_reported = True
+    for row in gpu_rows:
+        if not row:
+            continue
+
+        # Older or restricted tools may return just a GPU name.
+        if len(row) == 1 and row[0].strip():
+            gpu_reports.append(
+                f"NVIDIA GPU detected: {row[0].strip()}; memory details unavailable"
+            )
+            continue
+
+        # Keep the GPU name useful even if a driver cannot report its memory.
+        if len(row) < 2:
+            continue
+        gpu_index, gpu_name = row[0].strip(), row[1].strip()
+        if len(row) >= 5:
+            try:
+                total_mib, used_mib, free_mib = (int(value.strip()) for value in row[2:5])
+            except ValueError:
+                memory_reported = False
+            else:
+                gpu_reports.append(
+                    f"GPU {gpu_index} {gpu_name}: "
+                    f"{total_mib / 1024:.1f} GiB total, "
+                    f"{used_mib / 1024:.1f} GiB used, "
+                    f"{free_mib / 1024:.1f} GiB free"
+                )
+                continue
+
+        memory_reported = False
+        gpu_reports.append(f"GPU {gpu_index} {gpu_name}: memory details unavailable")
+
+    if not gpu_reports:
+        return CheckResult("info", "nvidia-smi ran, but it reported no readable NVIDIA GPU")
+
+    status = "ok" if memory_reported else "info"
+    return CheckResult(status, "; ".join(gpu_reports))
 
 
 def run_checks() -> list[CheckResult]:
@@ -78,6 +148,8 @@ def run_checks() -> list[CheckResult]:
         check_git(),
         check_package("numpy"),
         check_package("dotenv"),
+        check_package("psutil"),
+        check_system_memory(),
         check_nvidia_gpu(),
     ]
 
