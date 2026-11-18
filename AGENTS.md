@@ -4,14 +4,20 @@ These notes explain concepts already present in this project. Add a short defini
 
 ### AI lab purpose and measurements
 
-- **Machine readiness check:** A program that checks whether a computer has the basic software and hardware needed for a task. `check_env.py` is intended to report items such as the Python version, whether required packages import correctly, and whether an NVIDIA GPU is available.
+- **Machine readiness check:** A program that checks whether a computer has the basic software and hardware needed for a task. `check_env.py` reports the Python version, whether required packages import correctly, system RAM, and (when available) NVIDIA GPU memory.
 - **Virtual environment:** An isolated Python setup for one project, so installed packages for one project do not interfere with another. Python detects an active virtual environment when `sys.prefix` differs from `sys.base_prefix`; the readiness check recommends one but does not fail if it is absent.
-- **Import:** Loading a Python module so the program can use its code. The readiness check tries to import `numpy` and `dotenv`, which correspond to the project's `numpy` and `python-dotenv` dependencies.
+- **Import:** Loading a Python module so the program can use its code. The readiness check tries to import `numpy`, `dotenv`, and `psutil`, which correspond to the project's declared dependencies.
 - **Command-line interface (CLI):** A way to run a program by typing a command in a terminal. `python -m ailab.check_env` asks Python to run the `check_env` module as a program.
 - **PATH:** A list of folders the operating system searches when a command is run by name. The readiness check uses it to see whether commands such as `git` and `nvidia-smi` are available.
 - **Subprocess:** A separate program started by Python. `check_env.py` starts `nvidia-smi` as a subprocess to ask NVIDIA's tool for GPU information.
 - **Exit code:** A number a program returns when it finishes. Zero usually means success; a nonzero number signals a problem. The readiness check returns a nonzero code when Python is too old or a required package cannot be imported.
 - **Timeout:** A limit on how long an operation may take. The GPU query has a five-second timeout so a stuck system command cannot hang the check indefinitely.
+- **System RAM:** The computer's main memory used by running programs. `check_env.py` reports total and used RAM along with available RAM, which the operating system says applications can still use.
+- **Available memory:** An estimate of memory the operating system can provide to programs, including memory it can reclaim from caches. The RAM check uses `psutil.virtual_memory().available` because raw free memory can understate what is usable.
+- **psutil:** A Python package that reports system and process information across common operating systems. This project uses `psutil.virtual_memory()` to read system RAM totals and availability.
+- **GPU memory / VRAM:** Memory attached to a GPU. `check_env.py` asks `nvidia-smi` for each NVIDIA GPU's total, used, and free memory; the amount free can change as other programs run.
+- **CSV (comma-separated values):** Text where each row contains values separated by commas. `check_env.py` asks `nvidia-smi` for CSV so it can parse one row of GPU information at a time.
+- **MiB and GiB:** Binary memory units: one MiB is 1,048,576 bytes and one GiB is 1,073,741,824 bytes. `nvidia-smi` reports memory in MiB in this query, and `check_env.py` divides by 1,024 to display GiB; the RAM check converts bytes to GiB by dividing by 1,073,741,824.
 - **Model parameter:** A learned number adjusted during training so an AI model can learn patterns. Parameters are not the text or images given to the model. A model may have millions or billions of parameters; counting them gives a rough size measure, not an exact measure of how much information it can understand. We count them because each stored parameter uses memory; multiplying the count by the bits used for each number estimates parameter storage. For example, 7 billion parameters stored at 16 bits each need about 14 GB for parameter storage alone.
 - **Model weights:** Another common name for the learned parameter values in a model. When a model is loaded, its weights must be placed in memory before it can make predictions.
 - **AI model:** A computer program made from a design (its architecture) and, for a trained model, learned parameter values. It uses the design and values to turn an input into a prediction or response.
