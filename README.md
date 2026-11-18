@@ -6,7 +6,7 @@ If the files and terms are new, start with the [plain-English project file tour]
 
 It helps answer four questions:
 
-1. **Is my Python setup ready?** `check_env.py` checks the Python version, virtual environment, Git command, required package imports, and whether NVIDIA's `nvidia-smi` tool can report a GPU.
+1. **Is my Python setup ready?** `check_env.py` checks the Python version, virtual environment, Git command, required package imports, system RAM, and whether NVIDIA's `nvidia-smi` tool can report GPU memory.
 2. **How much memory might model weights need?** `model_size.py` estimates parameter storage from a parameter count and number format.
 3. **How quickly does this machine multiply matrices?** `benchmark.py` measures NumPy matrix multiplication and saves settings and timings as JSON.
 4. **How do local and Colab measurements compare?** `notebooks/report.ipynb` reads the saved JSON files and compares compatible runs.
@@ -32,6 +32,8 @@ This creates `.venv`, an isolated Python environment for this project, and insta
 ```sh
 make setup PYTHON=python3.12
 ```
+
+If a new dependency is added to `pyproject.toml`, run `make setup` again so it is installed in `.venv`.
 
 PowerShell setup:
 
@@ -107,7 +109,7 @@ An existing file is preserved unless `--force` is supplied. `data/` contents are
 ## Important limits
 
 - The model-size result estimates storage for weights only. It does not inspect a model file or available RAM/VRAM, and it excludes memory needed while the model runs.
-- The environment check can ask `nvidia-smi` about NVIDIA hardware; it does not measure free GPU memory or check every GPU vendor.
+- The environment check reports total, used, and available system RAM. If NVIDIA's `nvidia-smi` is available, it reports total, used, and free VRAM for each NVIDIA GPU. It does not check every GPU vendor, and the reported free memory can change while other programs use the GPU.
 - The benchmark uses NumPy and does not select a GPU. It measures the NumPy matrix-multiplication implementation available in that environment, normally on the CPU. The `local` and `colab` labels describe where you ran it; they do not configure the hardware.
 - The benchmark limits each matrix edge to 4096 elements to reduce accidental large allocations. This still uses about 192 MiB for its two inputs and one output at maximum size, before NumPy backend workspace.
 - For a fair timing comparison, use the same matrix size and data type on both machines. Different hardware, system load, and NumPy builds can still affect results.
