@@ -8,7 +8,7 @@ This map connects the current tools with the concepts they teach. The repository
 |---|---|---|---|
 | Project setup and settings | `pyproject.toml`, `.env.example`, `src/ailab/config.py` | Create `.venv`, install the package, load defaults, and retrieve a required key | Required versus optional dependencies; configuration versus secrets; why `.env` stays local |
 | Logging | `src/ailab/logging_setup.py`, `tests/test_logging_setup.py` | Configure a level and optionally write a log file | What a log record is and how levels filter messages |
-| Machine readiness | `src/ailab/check_env.py` | Run `make check` and interpret each status | Python version, active virtual environment, package imports, Git availability, and the limits of an NVIDIA-only probe |
+| Machine readiness | `src/ailab/check_env.py` | Run `make check` and interpret each status | Python version, active virtual environment, package imports, Git availability, system RAM, NVIDIA VRAM, and GPU vendor limits |
 | Model memory estimate | `src/ailab/model_size.py`, `tests/test_model_size.py` | Compare `fp32`, `fp16`, `bf16`, `int8`, and `int4` estimates | How parameter count and bits per parameter estimate weight storage, and why runtime memory is higher |
 | Performance benchmark | `src/ailab/benchmark.py` | Run a small benchmark, change its size/repetitions, and inspect its JSON | Matrix multiplication timing, warm-up, repeated measurements, seeds, and why the current NumPy benchmark does not choose a GPU |
 | Compare results | `notebooks/report.ipynb` | Load local and Colab JSON files and compare compatible runs | Why matrix size and data type need to match, and why a timing is tied to the machine and software environment |
