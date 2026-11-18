@@ -55,7 +55,7 @@ The Makefile invokes `.venv/bin/python` directly, so `make check` should report 
 
 ### `nvidia-smi` is not found or cannot query a GPU
 
-This is an informational result. The checker only asks NVIDIA's `nvidia-smi` tool for GPU details. It does not report free VRAM, and it does not identify AMD, Apple, or other non-NVIDIA GPUs. The rest of the readiness checks can still be useful without an NVIDIA GPU.
+This is an informational result. The checker asks NVIDIA's `nvidia-smi` tool for each NVIDIA GPU's name and memory details. If the tool or driver cannot provide them, the remaining readiness checks can still be useful. The checker does not identify AMD, Apple, or other non-NVIDIA GPUs.
 
 ## Model memory estimate
 
